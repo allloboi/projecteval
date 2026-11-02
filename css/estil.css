@@ -117,6 +117,7 @@ body {
 
 /* ---------- Contingut principal ---------- */
 main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; min-height: 50vh; }
+main:empty { display: none; }
 
 .targeta {
   background: #fff;
