@@ -1,0 +1,162 @@
+:root {
+  --color: #1f6feb;
+  --color-fosc: #164eaa;
+  --fons: #f3f5f9;
+  --text: #1c2430;
+  --gris: #6b7686;
+  --vora: #d9dfe8;
+  --verd: #1a8d4a;
+  --roig: #c62d3a;
+  --radi: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--fons);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.capcalera {
+  background: var(--color);
+  color: #fff;
+  padding: 12px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 28px;
+}
+.capcalera h1 { margin: 0; font-size: 1.3rem; }
+
+#menu { display: flex; flex-wrap: wrap; gap: 6px; }
+#menu button {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.4);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+#menu button.actiu { background: #fff; color: var(--color-fosc); font-weight: 600; }
+
+main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+.targeta {
+  background: #fff;
+  border: 1px solid var(--vora);
+  border-radius: var(--radi);
+  padding: 18px;
+  margin-bottom: 18px;
+}
+.targeta h2 { margin-top: 0; font-size: 1.15rem; }
+
+.fila { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.camp { display: flex; flex-direction: column; gap: 4px; flex: 1 1 200px; }
+.camp label { font-size: .85rem; color: var(--gris); }
+
+input, select, textarea {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--vora);
+  border-radius: 8px;
+  background: #fff;
+  width: 100%;
+}
+input:focus, select:focus, textarea:focus, button:focus-visible {
+  outline: 2px solid var(--color);
+  outline-offset: 1px;
+}
+textarea { min-height: 90px; resize: vertical; }
+
+button.btn {
+  background: var(--color);
+  color: #fff;
+  border: 0;
+  padding: 11px 18px;
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+}
+button.btn:hover { background: var(--color-fosc); }
+button.btn.sec { background: #fff; color: var(--color-fosc); border: 1px solid var(--color); }
+button.btn.sec:hover { background: #eaf1ff; }
+button.btn.perill { background: #fff; color: var(--roig); border: 1px solid var(--roig); }
+button.btn.perill:hover { background: #fdecee; }
+button.btn.petit { padding: 7px 12px; font-size: .9rem; }
+
+.taula-contenidor { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--vora); vertical-align: middle; }
+th { font-size: .85rem; color: var(--gris); font-weight: 600; }
+td.num, th.num { text-align: right; }
+td.accions { white-space: nowrap; text-align: right; }
+
+.buit { color: var(--gris); text-align: center; padding: 24px 0; }
+
+.nota { font-weight: 700; }
+.nota.aprovat { color: var(--verd); }
+.nota.suspes { color: var(--roig); }
+
+.criteri {
+  border: 1px solid var(--vora);
+  border-radius: var(--radi);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.criteri-cap { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.criteri small { color: var(--gris); display: block; }
+.criteri-nota { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.criteri-nota input[type=range] { padding: 0; border: 0; flex: 1; height: 32px; }
+.criteri-nota input[type=number] { width: 90px; }
+
+.total {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  border: 1px solid var(--vora);
+  border-radius: var(--radi);
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  box-shadow: 0 -4px 14px rgba(0,0,0,.06);
+}
+.total .gran { font-size: 1.8rem; }
+
+.aviso-pes { color: var(--roig); font-size: .9rem; }
+.ok-pes { color: var(--verd); font-size: .9rem; }
+
+.avis {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(100px);
+  background: #1c2430;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  opacity: 0;
+  transition: all .25s;
+  pointer-events: none;
+  z-index: 10;
+}
+.avis.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 700px) {
+  main { padding: 12px; }
+  .capcalera { padding: 10px 12px; }
+  #menu button { flex: 1; padding: 10px 8px; }
+  .criteri-nota { flex-wrap: wrap; }
+}
+
+@media print {
+  .capcalera, .no-imprimir, .avis { display: none !important; }
+  body { background: #fff; }
+  .targeta { border: 0; padding: 0; }
+}
