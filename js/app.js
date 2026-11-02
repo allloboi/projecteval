@@ -36,6 +36,7 @@ const ALUMNES_GRUPS = GRUPS_NOUS.flatMap(g => g.noms.map((nom, i) =>
 let dades = carregar();
 let vista = 'alumnes';
 let alumneActiu = null;
+let grupActiu = null;
 let alumneEditant = null;
 let criteriEditant = null;
 let filtre = '';
@@ -200,7 +201,7 @@ function vistaAlumnes() {
 
 /* ---------- Vista: Grups ---------- */
 
-function vistaGrups() {
+function llistaGrups() {
   const grups = [];
   dades.alumnes.forEach(a => {
     const nom = a.cicle || 'Sense grup';
@@ -208,10 +209,30 @@ function vistaGrups() {
     if (!g) grups.push(g = { nom, alumnes: [] });
     g.alumnes.push(a);
   });
+  return grups;
+}
+
+function vistaGrups() {
+  const grups = llistaGrups();
   if (!grups.length) {
     return '<section class="targeta"><p class="buit">Encara no hi ha cap grup.</p></section>';
   }
-  return grups.map(g => `
+  if (!grups.some(g => g.nom === grupActiu)) grupActiu = grups[0].nom;
+  const opcions = grups.map(g =>
+    `<option value="${esc(g.nom)}" ${g.nom === grupActiu ? 'selected' : ''}>${esc(g.nom)} (${g.alumnes.length})</option>`).join('');
+  const seleccio = `
+    <section class="targeta">
+      <div class="fila">
+        <div class="camp"><label for="sel-grup">Grup</label>
+          <select id="sel-grup">${opcions}</select></div>
+      </div>
+      <form id="form-grup" class="fila">
+        <div class="camp"><label for="nom-grup">Nom del grup</label>
+          <input id="nom-grup" required value="${esc(grupActiu)}"></div>
+        <button class="btn" type="submit">Canvia el nom</button>
+      </form>
+    </section>`;
+  return seleccio + grups.filter(g => g.nom === grupActiu).map(g => `
     <section class="targeta">
       <h2>${esc(g.nom)} (${g.alumnes.length})</h2>
       <div class="taula-contenidor"><table>
@@ -390,6 +411,19 @@ contingut.addEventListener('submit', e => {
       dades.alumnes.push({ id: nouId(), ...a });
       avis('Alumne afegit');
     }
+  } else if (e.target.id === 'form-grup') {
+    const nou = val('nom-grup');
+    if (nou !== grupActiu) {
+      if (llistaGrups().some(g => g.nom === nou)) {
+        avis('Ja existeix un grup amb aquest nom');
+        return;
+      }
+      dades.alumnes.forEach(a => {
+        if ((a.cicle || 'Sense grup') === grupActiu) a.cicle = nou;
+      });
+      grupActiu = nou;
+      avis('Nom del grup actualitzat');
+    }
   } else if (e.target.id === 'form-criteri') {
     const c = {
       nom: val('c-nom'),
@@ -480,6 +514,9 @@ contingut.addEventListener('input', e => {
 contingut.addEventListener('change', e => {
   if (e.target.id === 'sel-alumne') {
     alumneActiu = e.target.value;
+    pintar();
+  } else if (e.target.id === 'sel-grup') {
+    grupActiu = e.target.value;
     pintar();
   } else if (e.target.id === 'fitxer-json') {
     importaJSON(e.target.files[0]);
