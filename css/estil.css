@@ -304,6 +304,14 @@ td.accions .btn + .btn { margin-left: 4px; }
 .peu-baix { border-top: 1px solid rgba(255,255,255,.1); text-align: center; padding: 16px; font-size: .88rem; color: #8d9bb8; }
 
 /* ---------- Tauleta i mòbil ---------- */
+/* Qualificació amb IA */
+.ia-nota { color: var(--gris); font-size: .85rem; }
+.ia-avisos { color: var(--roig); font-size: .9rem; padding-left: 20px; }
+.ia-fitxers { list-style: none; padding: 0; margin: 12px 0; display: flex; flex-direction: column; gap: 6px; }
+.ia-fitxers li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 12px; border: 1px solid var(--vora); border-radius: 10px; background: var(--fons); word-break: break-all; }
+.ia-fitxers small { color: var(--gris); margin-left: 6px; }
+.ia-just { white-space: pre-wrap; }
+
 @media (max-width: 960px) {
   .heroi-dins { padding: 44px 24px; gap: 24px; }
   .graella { grid-template-columns: repeat(2, 1fr); }
