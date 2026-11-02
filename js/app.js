@@ -431,8 +431,9 @@ function vistaQualificar() {
   if (!dades.alumnes.some(a => a.id === alumneActiu)) alumneActiu = dades.alumnes[0].id;
   const alumne = dades.alumnes.find(a => a.id === alumneActiu);
   const notes = notesDe(alumneActiu, avaluacio);
+  grupActiu = nomGrup(alumne);
 
-  const opcions = dades.alumnes.map(a =>
+  const opcions = dades.alumnes.filter(a => nomGrup(a) === grupActiu).map(a =>
     `<option value="${a.id}" ${a.id === alumneActiu ? 'selected' : ''}>${esc(a.nom)}</option>`).join('');
 
   const criteris = criterisDe(nomGrup(alumne)).map(c => {
@@ -457,11 +458,10 @@ function vistaQualificar() {
   return `
     <section class="targeta">
       <div class="fila">
+        ${selectorGrup(llistaGrups())}
         <div class="camp"><label for="sel-alumne">Alumne</label>
           <select id="sel-alumne">${opcions}</select></div>
         ${selectorAvaluacio()}
-        <div class="camp"><label>Grup</label>
-          <input value="${esc(nomGrup(alumne))}" disabled></div>
         <div class="camp"><label>Projecte</label>
           <input value="${esc(alumne.projecte)}" disabled></div>
       </div>
@@ -717,6 +717,11 @@ contingut.addEventListener('change', e => {
   } else if (e.target.id === 'sel-grup') {
     grupActiu = e.target.value;
     criteriEditant = null;
+    const actual = dades.alumnes.find(a => a.id === alumneActiu);
+    if (!actual || nomGrup(actual) !== grupActiu) {
+      const primer = dades.alumnes.find(a => nomGrup(a) === grupActiu);
+      if (primer) alumneActiu = primer.id;
+    }
     pintar();
   } else if (e.target.id === 'sel-avaluacio') {
     totesAvaluacions = e.target.value === 'totes';
