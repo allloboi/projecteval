@@ -24,6 +24,15 @@ const NOMS_ALUMNES = [
 const ALUMNES_INICIALS = NOMS_ALUMNES.map(([ini, nom]) =>
   ({ id: 'ini-' + ini.toLowerCase(), nom, cicle: CICLE_INICIAL, projecte: '' }));
 
+const GRUPS_NOUS = [
+  { cicle: '1 DAW BD', prefix: 'daw', noms: ['AlvBriGim', 'CriCalCue', 'IvaChaMue', 'KarElaSef', 'PauGarPér',
+    'DieIvaPet', 'DanKhaBal', 'PepLloGra', 'MoiMuñRod', 'MarOrtPer', 'SaüPayRub', 'SofPetPet', 'GuiSanBat'] },
+  { cicle: 'CE NÚVOL', prefix: 'nuvol', noms: ['AsiDomBañ', 'JoaFerNav', 'JosGalSan', 'JosJuaTor', 'ÁngLloLóp',
+    'LauMicPér', 'JesNavDat', 'AlePerCal', 'AleRodCal'] }
+];
+const ALUMNES_GRUPS = GRUPS_NOUS.flatMap(g => g.noms.map((nom, i) =>
+  ({ id: `grup-${g.prefix}-${i + 1}`, nom, cicle: g.cicle, projecte: '' })));
+
 let dades = carregar();
 let vista = 'alumnes';
 let alumneActiu = null;
@@ -54,13 +63,22 @@ function carregar() {
         guardat.nomsActualitzats = true;
         localStorage.setItem(CLAU, JSON.stringify(guardat));
       }
+      if (!guardat.grupsAfegits) {
+        // Afegeix els grups nous (només una vegada)
+        ALUMNES_GRUPS.forEach(a => {
+          if (!guardat.alumnes.some(x => x.id === a.id)) guardat.alumnes.push({ ...a });
+        });
+        guardat.grupsAfegits = true;
+        localStorage.setItem(CLAU, JSON.stringify(guardat));
+      }
       return guardat;
     }
   } catch (e) { /* dades corruptes: es comença de nou */ }
   return {
     alumnesInicials: true,
     nomsActualitzats: true,
-    alumnes: ALUMNES_INICIALS.map(a => ({ ...a })),
+    grupsAfegits: true,
+    alumnes: [...ALUMNES_INICIALS, ...ALUMNES_GRUPS].map(a => ({ ...a })),
     criteris: CRITERIS_INICIALS.map(c => ({ id: nouId(), ...c })),
     notes: {},
     comentaris: {}
@@ -134,6 +152,7 @@ function anar(nova) {
 function pintar() {
   const cont = document.getElementById('contingut');
   if (vista === 'alumnes') cont.innerHTML = vistaAlumnes();
+  else if (vista === 'grups') cont.innerHTML = vistaGrups();
   else if (vista === 'criteris') cont.innerHTML = vistaCriteris();
   else if (vista === 'qualificar') cont.innerHTML = vistaQualificar();
   else cont.innerHTML = vistaResum();
@@ -177,6 +196,37 @@ function vistaAlumnes() {
           <tbody>${files}</tbody>
         </table></div>` : '<p class="buit">Encara no hi ha cap alumne. Afegeix-ne un amb el formulari.</p>'}
     </section>`;
+}
+
+/* ---------- Vista: Grups ---------- */
+
+function vistaGrups() {
+  const grups = [];
+  dades.alumnes.forEach(a => {
+    const nom = a.cicle || 'Sense grup';
+    let g = grups.find(x => x.nom === nom);
+    if (!g) grups.push(g = { nom, alumnes: [] });
+    g.alumnes.push(a);
+  });
+  if (!grups.length) {
+    return '<section class="targeta"><p class="buit">Encara no hi ha cap grup.</p></section>';
+  }
+  return grups.map(g => `
+    <section class="targeta">
+      <h2>${esc(g.nom)} (${g.alumnes.length})</h2>
+      <div class="taula-contenidor"><table>
+        <thead><tr><th>Alumne</th><th>Projecte</th><th class="num">Nota final</th><th></th></tr></thead>
+        <tbody>${g.alumnes.map(a => {
+          const nf = notaFinal(a.id);
+          return `<tr>
+            <td>${esc(a.nom)}</td>
+            <td>${esc(a.projecte)}</td>
+            <td class="num nota ${classeNota(nf)}">${formatNota(nf)}</td>
+            <td class="accions"><button class="btn sec petit" data-accio="qualificar" data-id="${a.id}">Qualificar</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </section>`).join('');
 }
 
 /* ---------- Vista: Criteris ---------- */
