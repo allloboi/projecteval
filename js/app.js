@@ -39,7 +39,7 @@ const AVALUACIONS = [['1', '1a avaluació'], ['2', '2a avaluació'], ['final', '
 let dades = carregar();
 let avaluacio = '1';
 let totesAvaluacions = false;
-let vista = 'alumnes';
+let vista = 'inici';
 let alumneActiu = null;
 let grupActiu = null;
 let alumneEditant = null;
@@ -243,9 +243,9 @@ function anar(nova) {
   pintar();
 }
 
-/* La portada, les xifres i els mòduls només es veuen a l'inici (Alumnes). */
+/* La portada, les xifres i els mòduls només es veuen a l'inici. */
 function pintarInici() {
-  const inici = vista === 'alumnes';
+  const inici = vista === 'inici';
   ['heroi', 'estadistiques', 'inici-extra'].forEach(id => {
     document.getElementById(id).hidden = !inici;
   });
@@ -264,7 +264,8 @@ function pintarInici() {
 function pintar() {
   pintarInici();
   const cont = document.getElementById('contingut');
-  if (vista === 'alumnes') cont.innerHTML = vistaAlumnes();
+  if (vista === 'inici') cont.innerHTML = '';
+  else if (vista === 'alumnes') cont.innerHTML = vistaAlumnes();
   else if (vista === 'grups') cont.innerHTML = vistaGrups();
   else if (vista === 'criteris') cont.innerHTML = vistaCriteris();
   else if (vista === 'qualificar') cont.innerHTML = vistaQualificar();
