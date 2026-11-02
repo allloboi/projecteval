@@ -34,10 +34,11 @@ const ALUMNES_GRUPS = GRUPS_NOUS.flatMap(g => g.noms.map((nom, i) =>
   ({ id: `grup-${g.prefix}-${i + 1}`, nom, cicle: g.cicle, projecte: '' })));
 
 /* [identificador, nom] de cada avaluació */
-const AVALUACIONS = [['1', '1a avaluació'], ['2', '2a avaluació'], ['final', '3a avaluació / final']];
+const AVALUACIONS = [['1', '1a avaluació'], ['2', '2a avaluació'], ['final', '3a avaluació']];
 
 let dades = carregar();
 let avaluacio = '1';
+let totesAvaluacions = false;
 let vista = 'alumnes';
 let alumneActiu = null;
 let grupActiu = null;
@@ -192,9 +193,17 @@ function avis(missatge) {
   avis.t = setTimeout(() => el.classList.remove('visible'), 2500);
 }
 
-function selectorAvaluacio() {
+/* Nota final del curs: mitjana de les avaluacions que ja tenen nota, o null si no n'hi ha cap. */
+function notaCurs(idAlumne) {
+  const notes = AVALUACIONS.map(([id]) => notaFinal(idAlumne, id)).filter(n => n !== null);
+  return notes.length ? notes.reduce((s, n) => s + n, 0) / notes.length : null;
+}
+
+function selectorAvaluacio(ambTotes) {
+  const triada = ambTotes && totesAvaluacions ? 'totes' : avaluacio;
   const opcions = AVALUACIONS.map(([id, nom]) =>
-    `<option value="${id}" ${id === avaluacio ? 'selected' : ''}>${nom}</option>`).join('');
+    `<option value="${id}" ${id === triada ? 'selected' : ''}>${nom}</option>`).join('') +
+    (ambTotes ? `<option value="totes" ${triada === 'totes' ? 'selected' : ''}>Totes les avaluacions i nota final</option>` : '');
   return `<div class="camp"><label for="sel-avaluacio">Avaluació</label>
           <select id="sel-avaluacio">${opcions}</select></div>`;
 }
@@ -477,6 +486,7 @@ function vistaResum() {
   const f = filtre.trim().toLowerCase();
   const llista = dades.alumnes.filter(a => nomGrup(a) === grupActiu &&
     (!f || (a.nom + ' ' + a.cicle + ' ' + a.projecte).toLowerCase().includes(f)));
+  if (totesAvaluacions) return vistaResumTotes(grups, llista);
   const criterisGrup = criterisDe(grupActiu);
   const caps = criterisGrup.map(c => `<th class="num">${esc(c.nom)}</th>`).join('');
   const nomAval = AVALUACIONS.find(([id]) => id === avaluacio)[1];
@@ -498,7 +508,7 @@ function vistaResum() {
     <section class="targeta">
       <div class="fila no-imprimir">
         ${selectorGrup(grups)}
-        ${selectorAvaluacio()}
+        ${selectorAvaluacio(true)}
         <div class="camp"><label for="filtre">Cerca</label>
           <input id="filtre" type="search" placeholder="Nom o projecte" value="${esc(filtre)}"></div>
         <button class="btn" data-accio="exporta-csv">Exporta a Excel (CSV)</button>
@@ -510,10 +520,56 @@ function vistaResum() {
       <p>Mitjana: <strong>${formatNota(mitjana)}</strong> · Aprovats: <strong>${aprovats}</strong> de ${amb.length} qualificats</p>
       ${llista.length ? `
         <div class="taula-contenidor"><table>
-          <thead><tr><th>Alumne</th>${caps}<th class="num">Final</th></tr></thead>
+          <thead><tr><th>Alumne</th>${caps}<th class="num">Nota</th></tr></thead>
           <tbody>${files}</tbody>
         </table></div>` : '<p class="buit">No hi ha cap alumne per mostrar.</p>'}
     </section>
+    ${copiaSeguretat()}`;
+}
+
+/* Resum amb les notes de totes les avaluacions i la nota final del curs. */
+function vistaResumTotes(grups, llista) {
+  const caps = AVALUACIONS.map(([, nom]) => `<th class="num">${nom}</th>`).join('');
+  const files = llista.map(a => {
+    const cel = AVALUACIONS.map(([id]) => {
+      const nf = notaFinal(a.id, id);
+      return `<td class="num nota ${classeNota(nf)}">${formatNota(nf)}</td>`;
+    }).join('');
+    const nc = notaCurs(a.id);
+    return `<tr><td>${esc(a.nom)}<br><small>${esc(a.projecte)}</small></td>${cel}
+      <td class="num nota ${classeNota(nc)}"><strong>${formatNota(nc)}</strong></td></tr>`;
+  }).join('');
+
+  const amb = llista.map(a => notaCurs(a.id)).filter(n => n !== null);
+  const mitjana = amb.length ? amb.reduce((s, n) => s + n, 0) / amb.length : null;
+  const aprovats = amb.filter(n => n >= 5).length;
+
+  return `
+    <section class="targeta">
+      <div class="fila no-imprimir">
+        ${selectorGrup(grups)}
+        ${selectorAvaluacio(true)}
+        <div class="camp"><label for="filtre">Cerca</label>
+          <input id="filtre" type="search" placeholder="Nom o projecte" value="${esc(filtre)}"></div>
+        <button class="btn" data-accio="exporta-csv">Exporta a Excel (CSV)</button>
+        <button class="btn sec" data-accio="imprimeix">Imprimeix</button>
+      </div>
+    </section>
+    <section class="targeta">
+      <h2>Totes les avaluacions · ${esc(grupActiu)}</h2>
+      <p>La nota final és la mitjana de les avaluacions que ja tenen nota.</p>
+      <p>Mitjana final: <strong>${formatNota(mitjana)}</strong> · Aprovats: <strong>${aprovats}</strong> de ${amb.length} qualificats</p>
+      ${llista.length ? `
+        <div class="taula-contenidor"><table>
+          <thead><tr><th>Alumne</th>${caps}<th class="num">Nota final</th></tr></thead>
+          <tbody>${files}</tbody>
+        </table></div>` : '<p class="buit">No hi ha cap alumne per mostrar.</p>'}
+    </section>
+    ${copiaSeguretat()}`;
+}
+
+function copiaSeguretat() {
+  return `
     <section class="targeta no-imprimir">
       <h2>Còpia de seguretat</h2>
       <p>Les dades es guarden en aquest navegador. Fes una còpia de tant en tant.</p>
@@ -663,7 +719,8 @@ contingut.addEventListener('change', e => {
     criteriEditant = null;
     pintar();
   } else if (e.target.id === 'sel-avaluacio') {
-    avaluacio = e.target.value;
+    totesAvaluacions = e.target.value === 'totes';
+    if (!totesAvaluacions) avaluacio = e.target.value;
     pintar();
   } else if (e.target.id === 'fitxer-json') {
     importaJSON(e.target.files[0]);
@@ -689,6 +746,7 @@ function exportaCSV() {
   AVALUACIONS.forEach(([, nom]) => {
     cap.push(...criterisGrup.map(c => `${nom} · ${c.nom} (${c.pes}%)`), `${nom} · Nota`, `${nom} · Comentaris`);
   });
+  cap.push('Nota final');
   const files = dades.alumnes.filter(a => nomGrup(a) === grupActiu).map(a => {
     const fila = [a.nom, a.cicle, a.projecte];
     AVALUACIONS.forEach(([id]) => {
@@ -700,6 +758,8 @@ function exportaCSV() {
         (dades.comentaris[a.id] || {})[id] || ''
       );
     });
+    const nc = notaCurs(a.id);
+    fila.push(nc === null ? '' : nc.toFixed(2).replace('.', ','));
     return fila;
   });
   // BOM i punt i coma perquè Excel ho obri bé en català
