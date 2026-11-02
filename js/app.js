@@ -10,6 +10,13 @@ const CRITERIS_INICIALS = [
   { nom: 'Autonomia i actitud', pes: 10, descripcio: 'Iniciativa, treball continuat i seguiment del tutor.' }
 ];
 
+const CICLE_INICIAL = '1 DAM SEMI';
+const ALUMNES_INICIALS = [
+  'RAC', 'AA', 'ABC', 'SBI', 'MCA', 'RCT', 'VCF', 'PDP', 'SFV', 'CF',
+  'XGD', 'PGJ', 'KGS', 'BHG', 'AIL', 'SJB', 'MLC', 'NMZ', 'AMS', 'NMR',
+  'MON', 'YPC', 'JRA', 'CRC', 'ISS', 'JTF', 'MVC', 'JVD'
+].map(nom => ({ id: 'ini-' + nom.toLowerCase(), nom, cicle: CICLE_INICIAL, projecte: '' }));
+
 let dades = carregar();
 let vista = 'alumnes';
 let alumneActiu = null;
@@ -22,10 +29,21 @@ let filtre = '';
 function carregar() {
   try {
     const guardat = JSON.parse(localStorage.getItem(CLAU));
-    if (guardat && Array.isArray(guardat.alumnes) && Array.isArray(guardat.criteris)) return guardat;
+    if (guardat && Array.isArray(guardat.alumnes) && Array.isArray(guardat.criteris)) {
+      if (!guardat.alumnesInicials) {
+        // Primera vegada: afegeix la llista inicial d'alumnes (només una vegada)
+        ALUMNES_INICIALS.forEach(a => {
+          if (!guardat.alumnes.some(x => x.id === a.id)) guardat.alumnes.push({ ...a });
+        });
+        guardat.alumnesInicials = true;
+        localStorage.setItem(CLAU, JSON.stringify(guardat));
+      }
+      return guardat;
+    }
   } catch (e) { /* dades corruptes: es comença de nou */ }
   return {
-    alumnes: [],
+    alumnesInicials: true,
+    alumnes: ALUMNES_INICIALS.map(a => ({ ...a })),
     criteris: CRITERIS_INICIALS.map(c => ({ id: nouId(), ...c })),
     notes: {},
     comentaris: {}
@@ -442,7 +460,7 @@ function importaJSON(fitxer) {
       const nou = JSON.parse(lector.result);
       if (!Array.isArray(nou.alumnes) || !Array.isArray(nou.criteris)) throw new Error();
       if (!confirm('Això substituirà totes les dades actuals. Vols continuar?')) return;
-      dades = { notes: {}, comentaris: {}, ...nou };
+      dades = { notes: {}, comentaris: {}, ...nou, alumnesInicials: true };
       guardar(); pintar(); avis('Còpia restaurada');
     } catch (err) {
       avis('El fitxer no és una còpia vàlida');
