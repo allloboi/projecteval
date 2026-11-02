@@ -11,11 +11,18 @@ const CRITERIS_INICIALS = [
 ];
 
 const CICLE_INICIAL = '1 DAM SEMI';
-const ALUMNES_INICIALS = [
-  'RAC', 'AA', 'ABC', 'SBI', 'MCA', 'RCT', 'VCF', 'PDP', 'SFV', 'CF',
-  'XGD', 'PGJ', 'KGS', 'BHG', 'AIL', 'SJB', 'MLC', 'NMZ', 'AMS', 'NMR',
-  'MON', 'YPC', 'JRA', 'CRC', 'ISS', 'JTF', 'MVC', 'JVD'
-].map(nom => ({ id: 'ini-' + nom.toLowerCase(), nom, cicle: CICLE_INICIAL, projecte: '' }));
+/* [abreviatura antiga (defineix l'id), nom nou: 3 lletres del nom i de cada cognom] */
+const NOMS_ALUMNES = [
+  ['RAC', 'Ram Apa Cho'], ['AA', 'Abo Azz'], ['ABC', 'ABC'], ['SBI', 'Seb Bra Itu'],
+  ['MCA', 'Mar Cal Alv'], ['RCT', 'Ric Cer Tau'], ['VCF', 'Val Cra Fro'], ['PDP', 'Pas Dom Par'],
+  ['SFV', 'Sim Flo Val'], ['CF', 'Cha Fou'], ['XGD', 'Xav Gar Dom'], ['PGJ', 'PGJ'],
+  ['KGS', 'Kev Gim Ste'], ['BHG', 'Bor Her Gis'], ['AIL', 'And Iva Lan'], ['SJB', 'Ser Jor Bal'],
+  ['MLC', 'Mar Lóp Can'], ['NMZ', 'Nat Mar Zel'], ['AMS', 'Ant Men Sal'], ['NMR', 'Nat Mur Rui'],
+  ['MON', 'Mar Olt Nav'], ['YPC', 'Yam Pon Can'], ['JRA', 'Jor Rib Ara'], ['CRC', 'Car Rui Cle'],
+  ['ISS', 'Ivá Sáe San'], ['JTF', 'Jua Tud Fer'], ['MVC', 'Mar Vid Cue'], ['JVD', 'Jos Vid Dur']
+];
+const ALUMNES_INICIALS = NOMS_ALUMNES.map(([ini, nom]) =>
+  ({ id: 'ini-' + ini.toLowerCase(), nom, cicle: CICLE_INICIAL, projecte: '' }));
 
 let dades = carregar();
 let vista = 'alumnes';
@@ -38,11 +45,21 @@ function carregar() {
         guardat.alumnesInicials = true;
         localStorage.setItem(CLAU, JSON.stringify(guardat));
       }
+      if (!guardat.nomsActualitzats) {
+        // Canvia les abreviatures antigues pels noms nous (només una vegada)
+        NOMS_ALUMNES.forEach(([ini, nom]) => {
+          const a = guardat.alumnes.find(x => x.id === 'ini-' + ini.toLowerCase());
+          if (a && a.nom === ini) a.nom = nom;
+        });
+        guardat.nomsActualitzats = true;
+        localStorage.setItem(CLAU, JSON.stringify(guardat));
+      }
       return guardat;
     }
   } catch (e) { /* dades corruptes: es comença de nou */ }
   return {
     alumnesInicials: true,
+    nomsActualitzats: true,
     alumnes: ALUMNES_INICIALS.map(a => ({ ...a })),
     criteris: CRITERIS_INICIALS.map(c => ({ id: nouId(), ...c })),
     notes: {},
