@@ -208,19 +208,52 @@ function selectorGrup(grups) {
 
 /* ---------- Navegació ---------- */
 
-document.getElementById('menu').addEventListener('click', e => {
-  const b = e.target.closest('button[data-vista]');
-  if (b) anar(b.dataset.vista);
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-vista]');
+  if (b) {
+    e.preventDefault();
+    anar(b.dataset.vista);
+    window.scrollTo(0, 0);
+  }
+});
+
+const botoMenu = document.getElementById('boto-menu');
+botoMenu.addEventListener('click', () => {
+  const obert = document.getElementById('menu').classList.toggle('obert');
+  botoMenu.setAttribute('aria-expanded', obert);
+  botoMenu.setAttribute('aria-label', obert ? 'Tanca el menú' : 'Obre el menú');
+  botoMenu.querySelector('use').setAttribute('href', obert ? '#i-x' : '#i-menu');
 });
 
 function anar(nova) {
   vista = nova;
-  document.querySelectorAll('#menu button').forEach(b =>
+  document.querySelectorAll('#menu button:not(.cta)').forEach(b =>
     b.classList.toggle('actiu', b.dataset.vista === vista));
+  // Tanca el menú d'hamburguesa en mòbil
+  if (document.getElementById('menu').classList.contains('obert')) botoMenu.click();
   pintar();
 }
 
+/* La portada, les xifres i els mòduls només es veuen a l'inici (Alumnes). */
+function pintarInici() {
+  const inici = vista === 'alumnes';
+  ['heroi', 'estadistiques', 'inici-extra'].forEach(id => {
+    document.getElementById(id).hidden = !inici;
+  });
+  if (!inici) return;
+  const grups = llistaGrups().length;
+  const qualificats = AVALUACIONS.reduce((s, [id]) =>
+    s + dades.alumnes.filter(a => notaFinal(a.id, id) !== null).length, 0);
+  const xifres = [
+    [dades.alumnes.length, 'Alumnes'], [grups, 'Grups'],
+    [dades.criteris.length, 'Criteris'], [qualificats, 'Qualificacions posades']
+  ];
+  document.getElementById('estadistiques').innerHTML = xifres.map(([n, t]) =>
+    `<div class="estad"><strong>${n}</strong><span>${t}</span></div>`).join('');
+}
+
 function pintar() {
+  pintarInici();
   const cont = document.getElementById('contingut');
   if (vista === 'alumnes') cont.innerHTML = vistaAlumnes();
   else if (vista === 'grups') cont.innerHTML = vistaGrups();
